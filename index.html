@@ -112,6 +112,38 @@
     const trialInfo = document.getElementById('trialInfo');
     const videos = [gtVideo, leftVideo, rightVideo];
 
+    // === 轻度阻止查看源码的客户端脚本（只作抑制，无法真正隐藏HTML） ===
+    (function installBasicDevtoolsDeterrent(){
+      // 禁用右键菜单
+      document.addEventListener('contextmenu', function(e){
+        e.preventDefault();
+      });
+
+      // 禁用常见快捷键（F12、Ctrl+Shift+I/C/J、Ctrl+U 等）
+      document.addEventListener('keydown', function(e){
+        // F12
+        if (e.keyCode === 123) {
+          e.preventDefault();
+          return false;
+        }
+        // Ctrl+Shift+I / Ctrl+Shift+C / Ctrl+Shift+J
+        if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'C' || e.key === 'c' || e.key === 'J' || e.key === 'j')) {
+          e.preventDefault();
+          return false;
+        }
+        // Ctrl+U (查看源代码)
+        if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) {
+          e.preventDefault();
+          return false;
+        }
+        // Ctrl+S / Ctrl+P / Ctrl+Shift+S 常见保存/打印，阻止以避免下载源码片段
+        if (e.ctrlKey && (e.key === 's' || e.key === 'S' || e.key === 'p' || e.key === 'P')) {
+          e.preventDefault();
+          return false;
+        }
+      }, false);
+    })();
+
     // === 视频加载错误时的重试机制 (无限重试，带退避) ===
     function setupVideoRetry(v) {
       // 使用 dataset 存储状态
