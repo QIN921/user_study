@@ -9,6 +9,7 @@
   p { line-height: 1.6; }
   video { width: 33%; margin: 10px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
     .video-row { display: flex; justify-content: center; align-items: center; }
+    .video-status { font-size: 13px; color: #b45309; margin-top: 6px; width: 33%; text-align: center; }
     .buttons { margin-top: 20px; }
     button {
       margin: 5px; padding: 10px 20px; border: none; border-radius: 6px;
@@ -28,11 +29,15 @@
 
   <!-- 视频 -->
   <div class="video-row">
+    <div class="video-status" id="status-gt" aria-live="polite"></div>
     <video id="gt" controls></video>
+    <div class="video-status" id="status-gt" aria-live="polite"></div>
   </div>
   <div class="video-row">
+    <div class="video-status" id="status-left" aria-live="polite"></div>
     <video id="left" controls></video>
     <video id="right" controls></video>
+    <div class="video-status" id="status-right" aria-live="polite"></div>
   </div>
 
   <!-- 按钮 -->
@@ -127,8 +132,9 @@
         // 指数退避：从2s开始，最多30s
         const delay = Math.min(Math.round(2000 * Math.pow(1.5, count - 1)), 30000);
 
-        const name = v.dataset && v.dataset.filename ? v.dataset.filename : v.id;
-        status.textContent = `⚠️ 视频 "${name}" 加载失败，正在尝试重试（第 ${count} 次，间隔 ${Math.round(delay/1000)}s）...`;
+          const name = v.dataset && v.dataset.filename ? v.dataset.filename : v.id;
+          const statusEl = document.getElementById(`status-${v.id}`) || status;
+          statusEl.textContent = `⚠️ 视频 "${name}" 加载失败，正在尝试重试（第 ${count} 次，间隔 ${Math.round(delay/1000)}s）...`;
 
         clearRetryTimer();
         const t = setTimeout(() => {
@@ -153,7 +159,8 @@
         // 成功加载，清除计时器和提示
         clearRetryTimer();
         v.dataset.retryCount = 0;
-        status.textContent = '';
+        const statusEl = document.getElementById(`status-${v.id}`) || status;
+        statusEl.textContent = '';
       });
     }
 
@@ -176,6 +183,13 @@
         status.textContent = "✅ 所有试验已完成。现在可以导出结果。";
         trialInfo.textContent = "";
         gtVideo.src = ""; leftVideo.src = ""; rightVideo.src = "";
+        // 清理各视频的状态提示
+        const sgt = document.getElementById('status-gt');
+        const sleft = document.getElementById('status-left');
+        const sright = document.getElementById('status-right');
+        if (sgt) sgt.textContent = '';
+        if (sleft) sleft.textContent = '';
+        if (sright) sright.textContent = '';
         return;
       }
 
@@ -187,6 +201,14 @@
       gtVideo.src = t.gt;
       leftVideo.src = leftSrc;
       rightVideo.src = rightSrc;
+
+  // 清理本次 trial 的各视频状态提示
+  const sgt = document.getElementById('status-gt');
+  const sleft = document.getElementById('status-left');
+  const sright = document.getElementById('status-right');
+  if (sgt) sgt.textContent = '';
+  if (sleft) sleft.textContent = '';
+  if (sright) sright.textContent = '';
 
       leftVideo.dataset.filename = leftSrc.split('/').pop().replace('.mp4', '');
       rightVideo.dataset.filename = rightSrc.split('/').pop().replace('.mp4', '');
