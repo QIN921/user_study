@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Study: Choose Your Preference</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin: 40px; background: #f7f7f7; }
+    h2 { color: #333; }
+    video { width: 30%; margin: 10px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+    .video-row { display: flex; justify-content: center; align-items: center; }
+    .buttons { margin-top: 20px; }
+    button {
+      margin: 5px; padding: 10px 20px; border: none; border-radius: 6px;
+      background-color: #007BFF; color: white; font-size: 16px; cursor: pointer;
+    }
+    .buttons br { display: block; margin: 10px 0; }
+    #status { color: green; margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+  <h2>User Study: Choose Your Preference</h2>
+  <p>
+    Please compare the videos below and choose your preference considering perceptual quality and similarity to the ground truth.<br>
+    <b>The first video is always the original (ground truth).</b><br>
+    The second row shows method A and method B in random order.<br>
+  </p>
+
+  <!-- Videos -->
+  <div class="video-row">
+    <video id="gt" controls></video>
+  </div>
+  <div class="video-row">
+    <video id="left" controls></video>
+    <video id="right" controls></video>
+  </div>
+
+  <!-- Buttons -->
+  <!-- <div class="buttons">
+    <button onclick="setPreference('Left')">Prefer Left</button>
+    <button onclick="setPreference('Right')">Prefer Right</button>
+    <button onclick="setPreference('Neutral')">Neutral</button>
+    <button onclick="saveAndNext()">Save & Next</button>
+    <button onclick="exportCSV()">Export Results CSV</button>
+  </div> -->
+  <div class="buttons">
+    <button onclick="setPreference('Left')">Prefer Left</button>
+    <button onclick="setPreference('Right')">Prefer Right</button>
+    <button onclick="setPreference('Neutral')">Neutral</button>
+    <br>
+    <button onclick="saveAndNext()">Save & Next</button>
+    <button onclick="exportCSV()">Export Results CSV</button>
+  </div>
+
+  <p id="status"></p>
+  <p id="trialInfo"></p>
+
+  <script>
+    // === 实验组定义 ===
+    const trials = [
+      { id: 1, gt: 'video/Kimono1_1920x1080_24/GT.mp4', A: 'video/Kimono1_1920x1080_24/Ours.mp4', B: 'video/Kimono1_1920x1080_24/DCVC_RT.mp4' },
+      { id: 2, gt: 'video/Kimono1_1920x1080_24/GT.mp4', A: 'video/Kimono1_1920x1080_24/Ours.mp4', B: 'video/Kimono1_1920x1080_24/DCVC_RT_2.mp4' },
+      { id: 3, gt: 'video/Kimono1_1920x1080_24/GT.mp4', A: 'video/Kimono1_1920x1080_24/Ours.mp4', B: 'video/Kimono1_1920x1080_24/VVC.mp4' },
+      { id: 4, gt: 'video/BasketballDrill_832x480_50/GT.mp4', A: 'video/BasketballDrill_832x480_50/Ours.mp4', B: 'video/BasketballDrill_832x480_50/DCVC_RT.mp4' },
+      { id: 5, gt: 'video/BasketballDrill_832x480_50/GT.mp4', A: 'video/BasketballDrill_832x480_50/Ours.mp4', B: 'video/BasketballDrill_832x480_50/DCVC_RT_2.mp4' },
+      { id: 6, gt: 'video/BasketballDrill_832x480_50/GT.mp4', A: 'video/BasketballDrill_832x480_50/Ours.mp4', B: 'video/BasketballDrill_832x480_50/VVC.mp4' },
+      { id: 7, gt: 'video/Johnny_1280x720_60/GT.mp4', A: 'video/Johnny_1280x720_60/Ours.mp4', B: 'video/Johnny_1280x720_60/DCVC_RT.mp4' },
+      { id: 8, gt: 'video/Johnny_1280x720_60/GT.mp4', A: 'video/Johnny_1280x720_60/Ours.mp4', B: 'video/Johnny_1280x720_60/DCVC_RT_2.mp4' },
+      { id: 9, gt: 'video/Johnny_1280x720_60/GT.mp4', A: 'video/Johnny_1280x720_60/Ours.mp4', B: 'video/Johnny_1280x720_60/VVC.mp4' },
+      { id: 10, gt: 'video/KristenAndSara_1280x720_60/GT.mp4', A: 'video/KristenAndSara_1280x720_60/Ours.mp4', B: 'video/KristenAndSara_1280x720_60/DCVC_RT.mp4' },
+      { id: 11, gt: 'video/KristenAndSara_1280x720_60/GT.mp4', A: 'video/KristenAndSara_1280x720_60/Ours.mp4', B: 'video/KristenAndSara_1280x720_60/DCVC_RT_2.mp4' },
+      { id: 12, gt: 'video/KristenAndSara_1280x720_60/GT.mp4', A: 'video/KristenAndSara_1280x720_60/Ours.mp4', B: 'video/KristenAndSara_1280x720_60/VVC.mp4' },
+      { id: 13, gt: 'video/BQSqure_416x240_60/GT.mp4', A: 'video/BQSqure_416x240_60/Ours.mp4', B: 'video/BQSqure_416x240_60/DCVC_RT.mp4' },
+      { id: 14, gt: 'video/BQSqure_416x240_60/GT.mp4', A: 'video/BQSqure_416x240_60/Ours.mp4', B: 'video/BQSqure_416x240_60/DCVC_RT_2.mp4' },
+      { id: 15, gt: 'video/BQSqure_416x240_60/GT.mp4', A: 'video/BQSqure_416x240_60/Ours.mp4', B: 'video/BQSqure_416x240_60/VVC.mp4' },
+      { id: 16, gt: 'video/videoSRC11_1920x1080_30/GT.mp4', A: 'video/videoSRC11_1920x1080_30/Ours.mp4', B: 'video/videoSRC11_1920x1080_30/DCVC_RT.mp4' },
+      { id: 17, gt: 'video/videoSRC11_1920x1080_30/GT.mp4', A: 'video/videoSRC11_1920x1080_30/Ours.mp4', B: 'video/videoSRC11_1920x1080_30/DCVC_RT_2.mp4' },
+      { id: 18, gt: 'video/videoSRC11_1920x1080_30/GT.mp4', A: 'video/videoSRC11_1920x1080_30/Ours.mp4', B: 'video/videoSRC11_1920x1080_30/VVC.mp4' },
+      // ... 添加更多
+    ];
+
+    // === 打乱Trial顺序 ===
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    // === 如果超过25个，则随机选取25个 ===
+    let selectedTrials = trials;
+    if (trials.length > 25) {
+      selectedTrials = shuffle([...trials]).slice(0, 25);
+    }
+
+    // === 最终随机顺序 ===
+    const randomizedTrials = shuffle([...selectedTrials]);
+
+    let current = 0;
+    let preference = null;
+    let results = [];
+
+    const gtVideo = document.getElementById('gt');
+    const leftVideo = document.getElementById('left');
+    const rightVideo = document.getElementById('right');
+    const status = document.getElementById('status');
+    const trialInfo = document.getElementById('trialInfo');
+    const videos = [gtVideo, leftVideo, rightVideo];
+
+    // === 同步播放 ===
+    videos.forEach(v => {
+      v.addEventListener('play', () => videos.forEach(x => { if (x !== v) x.play(); }));
+      v.addEventListener('pause', () => videos.forEach(x => { if (x !== v) x.pause(); }));
+      v.addEventListener('seeked', () => {
+        const t = v.currentTime;
+        videos.forEach(x => { if (Math.abs(x.currentTime - t) > 0.2) x.currentTime = t; });
+      });
+    });
+
+    // === 载入Trial ===
+    function loadTrial() {
+      if (current >= randomizedTrials.length) {
+        status.textContent = "✅ All trials finished. You can now export the results.";
+        trialInfo.textContent = "";
+        gtVideo.src = ""; leftVideo.src = ""; rightVideo.src = "";
+        return;
+      }
+
+      const t = randomizedTrials[current];
+      const swap = Math.random() < 0.5;
+      const leftSrc = swap ? t.A : t.B;
+      const rightSrc = swap ? t.B : t.A;
+
+      gtVideo.src = t.gt;
+      leftVideo.src = leftSrc;
+      rightVideo.src = rightSrc;
+
+      leftVideo.dataset.filename = leftSrc.split('/').pop().replace('.mp4', '');
+      rightVideo.dataset.filename = rightSrc.split('/').pop().replace('.mp4', '');
+
+      preference = null;
+      status.textContent = "";
+      trialInfo.textContent = `Trial ${current + 1} / ${randomizedTrials.length}`;
+    }
+
+    function setPreference(choice) {
+      preference = choice;
+      status.textContent = "Preference selected: " + choice;
+    }
+
+    // === 保存 + 下一组 ===
+    function saveAndNext() {
+      if (!preference) {
+        alert("⚠️ Please select your preference before continuing.");
+        return;
+      }
+
+      const t = randomizedTrials[current];
+      let chosen;
+      if (preference === 'Neutral') {
+        chosen = 'Neutral';
+      } else if (preference === 'Left') {
+        chosen = leftVideo.dataset.filename;
+      } else {
+        chosen = rightVideo.dataset.filename;
+      }
+
+      results.push({
+        trialOrder: current + 1,
+        originalID: t.id,
+        GT: t.gt.split('/').slice(-2, -1)[0],  // e.g., "BasketballDrill_832x480_50"
+        leftVideo: leftVideo.dataset.filename,
+        rightVideo: rightVideo.dataset.filename,
+        choice: chosen,
+        timestamp: new Date().toISOString()
+      });
+
+      current++;
+      loadTrial();
+    }
+
+    // === 导出CSV ===
+    function exportCSV() {
+      if (results.length === 0) {
+        alert("No results to export.");
+        return;
+      }
+      const csv = "TrialOrder,OriginalID,VideoSet,LeftVideo,RightVideo,Choice,Timestamp\n" +
+        results.map(r => `${r.trialOrder},${r.originalID},${r.GT},${r.leftVideo},${r.rightVideo},${r.choice},${r.timestamp}`).join("\n");
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "user_study_results.csv";
+      a.click();
+    }
+
+    // === 初始化 ===
+    loadTrial();
+  </script>
+
+</body>
+</html>
