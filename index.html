@@ -35,14 +35,6 @@
     <video id="right" controls></video>
   </div>
 
-  <!-- Buttons -->
-  <!-- <div class="buttons">
-    <button onclick="setPreference('Left')">Prefer Left</button>
-    <button onclick="setPreference('Right')">Prefer Right</button>
-    <button onclick="setPreference('Neutral')">Neutral</button>
-    <button onclick="saveAndNext()">Save & Next</button>
-    <button onclick="exportCSV()">Export Results CSV</button>
-  </div> -->
   <div class="buttons">
     <button onclick="setPreference('Left')">Prefer Left</button>
     <button onclick="setPreference('Right')">Prefer Right</button>
@@ -149,6 +141,24 @@
       status.textContent = "Preference selected: " + choice;
     }
 
+    // === 文件名映射到字母 (用于CSV) ===
+    function mapFilenameToLetter(name) {
+      // 一般 name 示例: 'Ours', 'DCVC_RT', 'DCVC_RT_2', 'VVC'
+      if (!name) return name;
+      switch (name) {
+        case 'Ours':
+          return 'A';
+        case 'DCVC_RT':
+          return 'B';
+        case 'DCVC_RT_2':
+          return 'C';
+        case 'VVC':
+          return 'D';
+        default:
+          return name; // 保留原值以防有其它命名
+      }
+    }
+
     // === 保存 + 下一组 ===
     function saveAndNext() {
       if (!preference) {
@@ -157,22 +167,28 @@
       }
 
       const t = randomizedTrials[current];
-      let chosen;
+      // 原始文件名
+      let rawChosen;
       if (preference === 'Neutral') {
-        chosen = 'Neutral';
+        rawChosen = 'Neutral';
       } else if (preference === 'Left') {
-        chosen = leftVideo.dataset.filename;
+        rawChosen = leftVideo.dataset.filename;
       } else {
-        chosen = rightVideo.dataset.filename;
+        rawChosen = rightVideo.dataset.filename;
       }
+
+      // 映射为字母（或保留 Neutral）
+      const leftMapped = mapFilenameToLetter(leftVideo.dataset.filename);
+      const rightMapped = mapFilenameToLetter(rightVideo.dataset.filename);
+      const choiceMapped = rawChosen === 'Neutral' ? 'Neutral' : mapFilenameToLetter(rawChosen);
 
       results.push({
         trialOrder: current + 1,
         originalID: t.id,
         GT: t.gt.split('/').slice(-2, -1)[0],  // e.g., "BasketballDrill_832x480_50"
-        leftVideo: leftVideo.dataset.filename,
-        rightVideo: rightVideo.dataset.filename,
-        choice: chosen,
+        leftVideo: leftMapped,
+        rightVideo: rightMapped,
+        choice: choiceMapped,
         timestamp: new Date().toISOString()
       });
 
