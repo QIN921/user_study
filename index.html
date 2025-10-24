@@ -107,6 +107,59 @@
     const trialInfo = document.getElementById('trialInfo');
     const videos = [gtVideo, leftVideo, rightVideo];
 
+    // === 视频加载错误时的重试机制 (无限重试，带退避) ===
+    function setupVideoRetry(v) {
+      // 使用 dataset 存储状态
+      v.dataset.retryCount = 0;
+      v.dataset.retryTimer = '';
+
+      function clearRetryTimer() {
+        if (v.dataset.retryTimer) {
+          try { clearTimeout(Number(v.dataset.retryTimer)); } catch (e) {}
+          v.dataset.retryTimer = '';
+        }
+      }
+
+      v.addEventListener('error', () => {
+        // 增加重试计数
+        v.dataset.retryCount = Number(v.dataset.retryCount || 0) + 1;
+        const count = Number(v.dataset.retryCount);
+        // 指数退避：从2s开始，最多30s
+        const delay = Math.min(Math.round(2000 * Math.pow(1.5, count - 1)), 30000);
+
+        const name = v.dataset && v.dataset.filename ? v.dataset.filename : v.id;
+        status.textContent = `⚠️ 视频 "${name}" 加载失败，正在尝试重试（第 ${count} 次，间隔 ${Math.round(delay/1000)}s）...`;
+
+        clearRetryTimer();
+        const t = setTimeout(() => {
+          try {
+            // 触发重新加载：重新设置 src 然后 load()
+            const src = v.getAttribute('src') || v.currentSrc || v.src;
+            if (src) {
+              // 先清空然后重设可以触发浏览器重新请求
+              v.src = '';
+              void v.offsetWidth; // 强制回流（微妙技巧）
+              v.src = src;
+              v.load();
+            }
+          } catch (e) {
+            // ignore
+          }
+        }, delay);
+        v.dataset.retryTimer = String(t);
+      });
+
+      v.addEventListener('loadeddata', () => {
+        // 成功加载，清除计时器和提示
+        clearRetryTimer();
+        v.dataset.retryCount = 0;
+        status.textContent = '';
+      });
+    }
+
+    // 为所有三个 video 设置重试机制
+    videos.forEach(v => setupVideoRetry(v));
+
     // === 同步播放 ===
     videos.forEach(v => {
       v.addEventListener('play', () => videos.forEach(x => { if (x !== v) x.play(); }));
