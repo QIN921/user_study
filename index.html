@@ -2,11 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>User Study: Choose Your Preference</title>
+    <title>用户研究：请选择您的偏好</title>
   <style>
     body { font-family: Arial, sans-serif; text-align: center; margin: 40px; background: #f7f7f7; }
-    h2 { color: #333; }
-    video { width: 30%; margin: 10px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+  h2 { color: #333; }
+  p { line-height: 1.6; }
+  video { width: 33%; margin: 10px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
     .video-row { display: flex; justify-content: center; align-items: center; }
     .buttons { margin-top: 20px; }
     button {
@@ -19,14 +20,13 @@
 </head>
 <body>
 
-  <h2>User Study: Choose Your Preference</h2>
+  <h2>用户研究：请选择您的偏好</h2>
   <p>
-    Please compare the videos below and choose your preference considering perceptual quality and similarity to the ground truth.<br>
-    <b>The first video is always the original (ground truth).</b><br>
-    The second row shows method A and method B in random order.<br>
+     请比较下面的视频，并根据感知质量、时间连续性以及与原始视频的相似性选择您的偏好。<br>
+     <b>第一排视频始终为原始视频。</b> 第二排以随机顺序显示方法 A 和方法 B。<br>
   </p>
 
-  <!-- Videos -->
+  <!-- 视频 -->
   <div class="video-row">
     <video id="gt" controls></video>
   </div>
@@ -35,13 +35,14 @@
     <video id="right" controls></video>
   </div>
 
+  <!-- 按钮 -->
   <div class="buttons">
-    <button onclick="setPreference('Left')">Prefer Left</button>
-    <button onclick="setPreference('Right')">Prefer Right</button>
-    <button onclick="setPreference('Neutral')">Neutral</button>
+    <button onclick="setPreference('Left')">选择左侧</button>
+    <button onclick="setPreference('Neutral')">中立</button>
+    <button onclick="setPreference('Right')">选择右侧</button>
     <br>
-    <button onclick="saveAndNext()">Save & Next</button>
-    <button onclick="exportCSV()">Export Results CSV</button>
+    <button onclick="saveAndNext()">保存并下一题</button>
+    <button onclick="exportCSV()">全部结束后导出结果</button>
   </div>
 
   <p id="status"></p>
@@ -68,6 +69,12 @@
       { id: 16, gt: 'video/videoSRC11_1920x1080_30/GT.mp4', A: 'video/videoSRC11_1920x1080_30/Ours.mp4', B: 'video/videoSRC11_1920x1080_30/DCVC_RT.mp4' },
       { id: 17, gt: 'video/videoSRC11_1920x1080_30/GT.mp4', A: 'video/videoSRC11_1920x1080_30/Ours.mp4', B: 'video/videoSRC11_1920x1080_30/DCVC_RT_2.mp4' },
       { id: 18, gt: 'video/videoSRC11_1920x1080_30/GT.mp4', A: 'video/videoSRC11_1920x1080_30/Ours.mp4', B: 'video/videoSRC11_1920x1080_30/VVC.mp4' },
+      { id: 19, gt: 'video/Bosphorus_1920x1080_120/GT.mp4', A: 'video/Bosphorus_1920x1080_120/Ours.mp4', B: 'video/Bosphorus_1920x1080_120/DCVC_RT.mp4' },
+      { id: 20, gt: 'video/Bosphorus_1920x1080_120/GT.mp4', A: 'video/Bosphorus_1920x1080_120/Ours.mp4', B: 'video/Bosphorus_1920x1080_120/DCVC_RT_2.mp4' },
+      { id: 21, gt: 'video/Bosphorus_1920x1080_120/GT.mp4', A: 'video/Bosphorus_1920x1080_120/Ours.mp4', B: 'video/Bosphorus_1920x1080_120/VVC.mp4' },
+      { id: 22, gt: 'video/YatchtRide_1920x1080_120/GT.mp4', A: 'video/YatchtRide_1920x1080_120/Ours.mp4', B: 'video/YatchtRide_1920x1080_120/DCVC_RT.mp4' },
+      { id: 23, gt: 'video/YatchtRide_1920x1080_120/GT.mp4', A: 'video/YatchtRide_1920x1080_120/Ours.mp4', B: 'video/YatchtRide_1920x1080_120/DCVC_RT_2.mp4' },
+      { id: 24, gt: 'video/YatchtRide_1920x1080_120/GT.mp4', A: 'video/YatchtRide_1920x1080_120/Ours.mp4', B: 'video/YatchtRide_1920x1080_120/VVC.mp4' },
       // ... 添加更多
     ];
 
@@ -113,7 +120,7 @@
     // === 载入Trial ===
     function loadTrial() {
       if (current >= randomizedTrials.length) {
-        status.textContent = "✅ All trials finished. You can now export the results.";
+        status.textContent = "✅ 所有试验已完成。现在可以导出结果。";
         trialInfo.textContent = "";
         gtVideo.src = ""; leftVideo.src = ""; rightVideo.src = "";
         return;
@@ -133,12 +140,12 @@
 
       preference = null;
       status.textContent = "";
-      trialInfo.textContent = `Trial ${current + 1} / ${randomizedTrials.length}`;
+        trialInfo.textContent = `试验 ${current + 1} / ${randomizedTrials.length}`;
     }
 
     function setPreference(choice) {
       preference = choice;
-      status.textContent = "Preference selected: " + choice;
+      status.textContent = "已选择偏好：" + choice;
     }
 
     // === 文件名映射到字母 (用于CSV) ===
@@ -162,7 +169,7 @@
     // === 保存 + 下一组 ===
     function saveAndNext() {
       if (!preference) {
-        alert("⚠️ Please select your preference before continuing.");
+        alert("⚠️ 请在继续前选择您的偏好。");
         return;
       }
 
@@ -199,16 +206,16 @@
     // === 导出CSV ===
     function exportCSV() {
       if (results.length === 0) {
-        alert("No results to export.");
+        alert("没有可导出的结果。");
         return;
       }
-      const csv = "TrialOrder,OriginalID,VideoSet,LeftVideo,RightVideo,Choice,Timestamp\n" +
+      const csv = "试验序号,原始ID,视频组,左视频,右视频,选择,时间戳\n" +
         results.map(r => `${r.trialOrder},${r.originalID},${r.GT},${r.leftVideo},${r.rightVideo},${r.choice},${r.timestamp}`).join("\n");
       const blob = new Blob([csv], { type: "text/csv" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "user_study_results.csv";
+      a.download = "用户研究结果.csv";
       a.click();
     }
 
